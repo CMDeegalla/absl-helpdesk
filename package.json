@@ -1,25 +1,30 @@
 {
-  "name": "absl-helpdesk-starter",
+  "name": "absl-helpdesk",
   "version": "1.0.0",
-  "description": "This is a mobile-responsive starter for Automated Barcode Solutions Pvt Ltd.\r It follows the uploaded sequence diagrams as requirements:",
+  "description": "Client support, field service and helpdesk platform for Automated Barcode Solutions (Pvt) Ltd.",
   "main": "app.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test",
+    "start": "npx serve -l 4173 .",
+    "build": "node scripts/build-dist.js",
+    "preview": "node scripts/build-dist.js && npx serve -l 4174 dist"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CMDeegalla/absl-helpdesk.git"
+    "url": "git+https://github.com/automated-barcode-solutions-help-desk/ABSL_HelpDesk.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/CMDeegalla/absl-helpdesk/issues"
+    "url": "https://github.com/automated-barcode-solutions-help-desk/ABSL_HelpDesk/issues"
   },
-  "homepage": "https://github.com/CMDeegalla/absl-helpdesk#readme",
+  "homepage": "https://github.com/automated-barcode-solutions-help-desk/ABSL_HelpDesk#readme",
   "devDependencies": {
-    "supabase": "^2.115.0"
+    "supabase": "^2.115.0",
+    "xlsx": "^0.18.5"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3"
   }
 }

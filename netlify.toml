@@ -1,0 +1,33 @@
+# Static site: no build step, the repository root is what gets served.
+[build]
+  publish = "."
+  command = ""
+
+# Never publish server-side material, local tooling or backups.
+[build.processing]
+  skip_processing = true
+
+[[redirects]]
+  from = "/"
+  to = "/login.html"
+  status = 302
+
+[[redirects]]
+  from = "/supabase/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/tests/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/scripts/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/device_management_CSV/*"
+  to = "/404.html"
+  status = 404

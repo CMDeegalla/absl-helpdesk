@@ -3,17 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Agent Queue | ABSL Helpdesk</title>
+    <title>Agent Desk | ABSL Helpdesk</title>
     <meta
       name="description"
       content="Review, update, and assign ABSL customer support tickets."
     />
+    
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="vendor/supabase-js-2.112.3.js"></script>
     <script src="config.js"></script>
+    <script defer src="helpers.js"></script>
     <script defer src="app.js"></script>
   </head>
   <body>
+    <div id="toastContainer" class="toast-container"></div>
+    <div id="modalOverlay" class="modal-overlay">
+      <div class="modal-card" id="modalCard"></div>
+    </div>
+
     <header class="topbar">
       <div>
         <p class="eyebrow">Automated Barcode Solutions Pvt Ltd</p>
@@ -31,7 +44,7 @@
       <a href="customer.html" data-route="customer">Customer</a>
       <a href="agent.html" data-route="agent">Agent</a>
       <a href="technician.html" data-route="technician">Technician</a>
-      <a href="admin.html" data-route="admin">Admin</a>
+      <a href="admin.html" data-route="admin">CEO Console</a>
     </nav>
 
     <main id="app" class="app-shell"></main>

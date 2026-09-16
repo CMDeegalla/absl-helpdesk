@@ -1,0 +1,67 @@
+Fingerprint Device Inventory & Classification System
+Master Workbook — auto-classifies every device into its correct storage box
+
+1) How to Use This Workbook — Overview
+
+"This master workbook automatically inspects every device record and assigns it to the correct physical storage box, based on the fault keywords found in the form responses."
+
+
+"The moment a row is entered on the ""All Devices (Master)"" sheet, its Assigned Box is calculated automatically by formula — and it instantly appears on the matching Box sheet too. No copy-pasting required."
+
+
+2) Box Definitions
+"Box W — Fully working units — zero faults, ready to deploy"
+"Box D1–D4 — Display-fault units, spread across 4 boxes by capacity"
+Box S1 — Sensor fault / missing fingerprint sensor
+Box K1 — Keypad / keyboard faults
+"Box P1 — Power-related issues (no supply, auto shut-off)"
+"Box U1 — Unclassified, needs manual inspection, or donor/scrap unit"
+
+
+3) How the Classification Logic Works
+
+"The text in Fault, Remark and Working Statement is scanned against the keyword lists on the ""Settings"" sheet. If more than one problem is present, this priority order decides the box (most critical fault wins):"
+
+
+1. Empty box / no physical device → U1
+
+
+2. Sensor fault → S1
+
+
+3. Display fault → D1–D4
+
+
+4. Keypad fault → K1
+
+
+5. Power fault → P1
+
+
+6. Any other/unspecified fault (e.g. speaker only) → U1 (flagged for manual review)
+
+
+7. No fault at all → W
+
+
+"The ""Notes / QC Flags"" column automatically warns you when a device has multiple faults, a duplicate Serial No, or a repair status with no detail — so nothing slips through unnoticed."
+
+
+4) Adding New Form Responses
+
+"Go to the ""All Devices (Master)"" sheet and paste the new Google Form row into the next blank row, columns B–J only (blue header). Everything from column K to V (green header) fills in automatically — do not type into those columns."
+
+
+"Formulas are pre-built for 250 rows (144 current devices + 106 reserved for growth). If you exceed this, copy row 251's K–V formulas downward to extend, and increase the buffer rows on each Box sheet the same way."
+
+
+5) Adjusting Settings
+
+"On the ""Settings"" sheet you can change how many units go in each D1–D4 box (Display Box Capacity), and add new keywords to any fault category to sharpen future classification — no formula editing required."
+
+
+6) Color Legend
+  Blue header  =  type or paste data here (source columns)
+"  Green header  =  auto-calculated by formula, never type here"
+
+Generated automatically from the Google Form response export. Prepared for internal office use — Component Testing & Sorting Unit.

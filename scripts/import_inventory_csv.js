@@ -64,6 +64,7 @@ function csvEscape(value) {
 const source = fs.readFileSync(path.resolve(inputPath), "utf8");
 const rows = parseCsv(source);
 const headers = rows.shift().map(cleanHeader);
+const totalRows = rows.length;
 
 const aliases = {
   item_code: "sku",
@@ -83,6 +84,11 @@ const finalHeaders = ["sku", "name", "category", "quantity_on_hand", "reorder_le
 const cleanRows = [];
 const rejectRows = [];
 
+let missingSkuOrNameCount = 0;
+let invalidNumbersCount = 0;
+let negativeValuesCount = 0;
+let duplicateSkusCount = 0;
+
 for (const row of rows) {
   const record = {};
   headers.forEach((header, index) => {
@@ -100,11 +106,46 @@ for (const row of rows) {
   };
 
   const errors = [];
-  if (!cleaned.sku) errors.push("missing sku");
-  if (!cleaned.name) errors.push("missing name");
-  if (!Number.isInteger(cleaned.quantity_on_hand) || cleaned.quantity_on_hand < 0) {
-    errors.push("bad quantity");
+  let hasMissingSkuOrName = false;
+  let hasInvalidNumber = false;
+  let hasNegativeValue = false;
+
+  if (!cleaned.sku) {
+    errors.push("missing sku");
+    hasMissingSkuOrName = true;
   }
+  if (!cleaned.name) {
+    errors.push("missing name");
+    hasMissingSkuOrName = true;
+  }
+
+  if (!Number.isInteger(cleaned.quantity_on_hand)) {
+    errors.push("bad quantity");
+    hasInvalidNumber = true;
+  } else if (cleaned.quantity_on_hand < 0) {
+    errors.push("negative quantity");
+    hasNegativeValue = true;
+  }
+
+  if (!Number.isInteger(cleaned.reorder_level)) {
+    errors.push("invalid reorder_level");
+    hasInvalidNumber = true;
+  } else if (cleaned.reorder_level < 0) {
+    errors.push("negative reorder_level");
+    hasNegativeValue = true;
+  }
+
+  if (Number.isNaN(cleaned.unit_cost)) {
+    errors.push("invalid unit_cost");
+    hasInvalidNumber = true;
+  } else if (cleaned.unit_cost < 0) {
+    errors.push("negative unit_cost");
+    hasNegativeValue = true;
+  }
+
+  if (hasMissingSkuOrName) missingSkuOrNameCount += 1;
+  if (hasInvalidNumber) invalidNumbersCount += 1;
+  if (hasNegativeValue) negativeValuesCount += 1;
 
   if (errors.length) {
     rejectRows.push([...finalHeaders.map((key) => record[key] || ""), errors.join("; ")]);
@@ -113,9 +154,24 @@ for (const row of rows) {
   }
 }
 
+// Duplicate SKU detection: keep only the first occurrence, move duplicates to rejects
+const seenSkus = new Set();
+const finalCleanRows = [];
+
+for (const row of cleanRows) {
+  const sku = row[0];
+  if (seenSkus.has(sku)) {
+    rejectRows.push([...row, "Duplicate SKU"]);
+    duplicateSkusCount += 1;
+  } else {
+    seenSkus.add(sku);
+    finalCleanRows.push(row);
+  }
+}
+
 fs.writeFileSync(
   outputPath,
-  [finalHeaders, ...cleanRows].map((row) => row.map(csvEscape).join(",")).join("\n")
+  [finalHeaders, ...finalCleanRows].map((row) => row.map(csvEscape).join(",")).join("\n")
 );
 
 fs.writeFileSync(
@@ -123,8 +179,14 @@ fs.writeFileSync(
   [[...finalHeaders, "errors"], ...rejectRows].map((row) => row.map(csvEscape).join(",")).join("\n")
 );
 
-console.log(`Cleaned rows: ${cleanRows.length}`);
-console.log(`Rejected rows: ${rejectRows.length}`);
-console.log(`Output: ${outputPath}`);
-console.log(`Rejects: ${rejectsPath}`);
+console.log("=== Inventory CSV Import Summary ===");
+console.log(`Total rows processed:  ${totalRows}`);
+console.log(`Accepted:              ${finalCleanRows.length}`);
+console.log(`Rejected:              ${rejectRows.length}`);
+console.log(`  - Missing SKU/name:  ${missingSkuOrNameCount}`);
+console.log(`  - Invalid numbers:   ${invalidNumbersCount}`);
+console.log(`  - Negative values:   ${negativeValuesCount}`);
+console.log(`  - Duplicate SKUs:    ${duplicateSkusCount}`);
+console.log(`Output:   ${outputPath}`);
+console.log(`Rejects:  ${rejectsPath}`);
 

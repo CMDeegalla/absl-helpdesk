@@ -6,3 +6,15 @@ dist/
 supabase/.temp/
 *.log
 
+# Local backups created during the pre-launch hardening pass.
+*.bak
+*.original
+
+# config.js holds the live project URL and publishable key. It is safe to
+# expose in a browser, but keep deployment-specific copies out of git.
+config.local.js
+
+# Local tooling scratch directories — never project content.
+.claude/
+.vercel
+.env*

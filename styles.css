@@ -1,19 +1,59 @@
+/* ============================================================
+   ABSL Helpdesk — Premium Design System
+   ============================================================ */
+
+/* --- Design Tokens --- */
 :root {
-  --ink: #172033;
-  --muted: #667085;
-  --line: #d8dee9;
-  --paper: #ffffff;
-  --wash: #f5f7fb;
-  --navy: #143055;
-  --teal: #087f8c;
-  --amber: #c47a19;
-  --green: #1f7a4d;
-  --red: #b42318;
-  --blue: #2563eb;
-  --shadow: 0 10px 25px rgba(20, 48, 85, 0.08);
+  --ink: #0f172a;
+  --ink-secondary: #334155;
+  --muted: #64748b;
+  --line: rgba(148, 163, 184, 0.25);
+  --line-solid: #e2e8f0;
+  --paper: rgba(255, 255, 255, 0.82);
+  --paper-solid: #ffffff;
+  --wash: #f0f4ff;
+  --wash-alt: #f8fafc;
+
+  --navy: #0f172a;
+  --navy-mid: #1e293b;
+  --teal: #0ea5e9;
+  --teal-dark: #0284c7;
+  --teal-light: rgba(14, 165, 233, 0.12);
+  --amber: #f59e0b;
+  --amber-light: rgba(245, 158, 11, 0.12);
+  --green: #10b981;
+  --green-light: rgba(16, 185, 129, 0.12);
+  --red: #ef4444;
+  --red-light: rgba(239, 68, 68, 0.10);
+  --blue: #3b82f6;
+  --blue-light: rgba(59, 130, 246, 0.10);
+  --purple: #8b5cf6;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow: 0 4px 16px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-xl: 0 32px 64px rgba(15, 23, 42, 0.16);
+
+  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --blur: blur(16px);
+  --blur-heavy: blur(24px);
 }
 
+/* --- Reset & Base --- */
 * {
+  box-sizing: border-box;
+}
+
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -23,14 +63,23 @@
 
 html {
   overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
   background: var(--wash);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(14, 165, 233, 0.06), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(139, 92, 246, 0.04), transparent);
   overflow-x: hidden;
+  min-height: 100vh;
 }
 
 button,
@@ -39,6 +88,7 @@ input,
 select,
 textarea {
   font: inherit;
+  color: inherit;
 }
 
 a {
@@ -52,31 +102,68 @@ button {
   white-space: normal;
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* --- Focus States --- */
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline-offset: 3px;
+}
+
+/* --- Top Bar --- */
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 16px clamp(16px, 4vw, 36px);
   color: #fff;
-  background: var(--navy);
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  backdrop-filter: var(--blur-heavy);
+}
+
+.topbar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.4), transparent);
 }
 
 .topbar h1 {
   margin: 2px 0 0;
-  font-size: clamp(22px, 3vw, 34px);
-  letter-spacing: 0;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.85) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .eyebrow {
   margin: 0;
-  font-size: 12px;
-  letter-spacing: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #cdd7e6;
+  color: rgba(148, 197, 255, 0.8);
 }
 
 .topbar-actions {
@@ -86,20 +173,33 @@ button {
   gap: 10px;
 }
 
+/* --- Role Navigation ---
+   A customer, agent or technician only ever has ONE visible link here —
+   allowedDashboardRoutes() returns just their own role; only admin gets
+   all four. A fixed 4-column (or 2-column, at narrower widths) grid held
+   that one link to a quarter or half width with dead empty track beside
+   it — measured at 45% width with a bare gap on a 700px screen, across
+   the whole 521-860px range. Flex-wrap sizes each link to the actual
+   count: one link fills the bar, two split it, four wrap sensibly. */
 .role-nav {
   position: sticky;
-  top: 77px;
-  z-index: 9;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  top: 73px;
+  z-index: 90;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 10px clamp(12px, 4vw, 36px);
-  background: rgba(245, 247, 251, 0.94);
+  background: rgba(240, 244, 255, 0.85);
   border-bottom: 1px solid var(--line);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
 }
 
+.role-nav a {
+  flex: 1 1 140px;
+}
+
+/* --- Shared Button Base --- */
 .role-nav a,
 .primary-button,
 .secondary-button,
@@ -108,72 +208,201 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
+  min-height: 44px;
   min-width: 0;
-  padding: 10px 14px;
-  border-radius: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius);
   border: 1px solid transparent;
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
 }
 
+/* --- Nav Links --- */
 .role-nav a {
-  color: var(--navy);
-  background: #fff;
-  border-color: var(--line);
+  color: var(--ink-secondary);
+  background: var(--paper-solid);
+  border-color: var(--line-solid);
+  box-shadow: var(--shadow-sm);
+}
+
+.role-nav a:hover {
+  background: var(--wash-alt);
+  border-color: var(--teal);
+  color: var(--teal-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
 }
 
 .role-nav a.is-active {
   color: #fff;
-  background: var(--teal);
-  border-color: var(--teal);
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+  border-color: var(--teal-dark);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 
+/* --- Primary Button --- */
 .primary-button {
   color: #fff;
-  background: var(--teal);
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.25);
 }
 
+.primary-button:hover {
+  background: linear-gradient(135deg, var(--teal-dark) 0%, #0369a1 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(14, 165, 233, 0.2);
+}
+
+/* --- Secondary Button --- */
 .secondary-button {
-  color: var(--navy);
-  background: #fff;
-  border-color: var(--line);
+  color: var(--ink-secondary);
+  background: var(--paper-solid);
+  border-color: var(--line-solid);
+  box-shadow: var(--shadow-sm);
 }
 
+.secondary-button:hover {
+  background: var(--wash-alt);
+  border-color: var(--teal);
+  color: var(--teal-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+/* --- Danger Button --- */
 .danger-button {
   color: #fff;
-  background: var(--red);
+  background: linear-gradient(135deg, var(--red) 0%, #dc2626 100%);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
+.danger-button:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+}
+
+/* --- Ghost Button --- */
 .ghost-button {
-  color: #fff;
-  background: transparent;
-  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
+.ghost-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+/* --- Disabled Buttons --- */
+button:disabled,
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* --- App Shell --- */
 .app-shell {
-  width: min(1180px, 100%);
+  width: min(1200px, 100%);
   margin: 0 auto;
   padding: clamp(16px, 4vw, 32px);
+  animation: fadeInUp 0.4s var(--transition) both;
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* --- Page Heading --- */
 .page-heading {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
   padding: 18px 0 2px;
 }
 
 .page-heading h2 {
   margin: 0 0 6px;
-  font-size: clamp(26px, 4vw, 40px);
-  letter-spacing: 0;
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ink);
 }
 
 .page-heading .eyebrow {
   color: var(--teal);
+  font-size: 12px;
 }
 
+/* --- Auth Pages --- */
 .auth-page {
   min-height: calc(100vh - 160px);
   display: grid;
@@ -183,39 +412,55 @@ button {
 
 .auth-card {
   width: min(460px, 100%);
-  padding: clamp(18px, 4vw, 28px);
+  padding: clamp(24px, 4vw, 36px);
+  background: var(--paper);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  animation: scaleIn 0.4s var(--transition) both;
 }
 
 .auth-card h2 {
-  margin: 0 0 16px;
-  font-size: clamp(26px, 5vw, 36px);
+  margin: 0 0 20px;
+  font-size: clamp(26px, 5vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 .auth-kicker {
   margin: 0 0 8px;
   color: var(--teal);
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .auth-switch {
-  margin: 16px 0 0;
+  margin: 20px 0 0;
   color: var(--muted);
+  text-align: center;
 }
 
 .auth-switch a {
   color: var(--teal);
-  font-weight: 800;
+  font-weight: 700;
+  transition: color var(--transition);
 }
 
+.auth-switch a:hover {
+  color: var(--teal-dark);
+}
+
+/* --- Grid Layouts --- */
 .hero-grid,
 .dashboard-grid,
 .detail-grid,
 .form-grid {
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
 .hero-grid {
@@ -227,26 +472,68 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* Stat cards vary by role — 1 for a customer, 3 for agent/technician, 4 for
+   admin. A fixed 3-column count left admin's 4th card alone in a second row
+   with two empty tracks beside it (measured: 769px of dead space at desktop
+   width). auto-fit sizes to however many cards there actually are, for any
+   count, without a per-role special case. Same specificity as .dashboard-grid
+   above — this must stay below it in the file to win. */
+.stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+/* Wide panels inside .dashboard-grid. These used to be inline
+   style="grid-column: span N" on the element itself — which broke badly
+   the moment the grid's own column count changed under them: at the
+   860px breakpoint .dashboard-grid drops to a single explicit column, but
+   a child still asking to span 2 or 3 forced the browser to invent
+   implicit tracks and auto-size them from content. Measured result: three
+   tracks of 28px / 0px / 580px instead of one clean full-width column —
+   a heading wrapped down to one or two characters per line, crushed into
+   a 46px-wide sliver, while its neighbour ballooned into the space that
+   should not have existed. Two different, breakpoint-safe fixes: */
+
+/* span 2 is a real desktop-only design choice (this panel is meant to be
+   2/3 width, not full), so it needs an explicit reset back to a single
+   normal column at the same breakpoint that collapses the grid — see the
+   860px media query below, which is where that reset lives. */
+.panel-span-2 {
+  grid-column: span 2;
+}
+
+/* "Always full width" doesn't need a magic number or a breakpoint reset
+   at all: line -1 always means the grid's own last line, whatever the
+   current column count is. At 3 columns that is line 4 (spans all
+   three); collapsed to 1 column it is line 2 (spans the one there is).
+   Correct at every width by construction, nothing to keep in sync. */
+.panel-span-full {
+  grid-column: 1 / -1;
+}
+
 .detail-grid {
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 360px;
 }
 
 .form-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* --- Panels & Cards --- */
 .panel,
 .ticket-card,
 .stat-card {
   min-width: 0;
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  transition: box-shadow var(--transition), transform var(--transition);
 }
 
 .panel {
-  padding: 18px;
+  padding: 22px;
 }
 
 .panel-title {
@@ -254,24 +541,27 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .panel h2,
 .panel h3 {
   margin: 0;
-  letter-spacing: 0;
+  letter-spacing: -0.02em;
   overflow-wrap: anywhere;
 }
 
 .panel h2 {
-  font-size: 22px;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .panel h3 {
-  font-size: 18px;
+  font-size: 17px;
+  font-weight: 700;
 }
 
+/* --- Typography Utilities --- */
 .muted {
   color: var(--muted);
 }
@@ -290,19 +580,41 @@ th {
   overflow-wrap: anywhere;
 }
 
+/* --- Stat Cards --- */
 .stat-card {
-  padding: 16px;
+  padding: 20px;
+  transition: transform var(--transition), box-shadow var(--transition);
+  cursor: default;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-card .muted {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .stat-card strong {
   display: block;
   margin-top: 8px;
-  font-size: 28px;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--ink) 0%, var(--ink-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
+/* --- Ticket List --- */
 .ticket-list {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .ticket-card {
@@ -310,7 +622,14 @@ th {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: start;
-  padding: 14px;
+  padding: 16px;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.ticket-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(14, 165, 233, 0.3);
 }
 
 .ticket-card-actions {
@@ -322,61 +641,69 @@ th {
 
 .ticket-card h3 {
   margin: 0 0 8px;
-  font-size: 17px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .ticket-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
+/* --- Badges --- */
 .badge {
   display: inline-flex;
   align-items: center;
   width: fit-content;
   min-height: 26px;
-  padding: 4px 9px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition: all var(--transition);
 }
 
 .badge-muted {
-  color: var(--ink);
-  background: #e8edf5;
+  color: var(--ink-secondary);
+  background: rgba(100, 116, 139, 0.1);
 }
 
 .badge-new {
-  color: #143055;
-  background: #dbeafe;
+  color: #1d4ed8;
+  background: var(--blue-light);
+  animation: pulse 2.5s ease-in-out infinite;
 }
 
 .badge-progress {
-  color: #744210;
-  background: #fef3c7;
+  color: #b45309;
+  background: var(--amber-light);
 }
 
 .badge-resolved {
-  color: #0f5132;
-  background: #dcfce7;
+  color: #047857;
+  background: var(--green-light);
 }
 
 .badge-closed {
-  color: #394150;
-  background: #e5e7eb;
+  color: var(--ink-secondary);
+  background: rgba(100, 116, 139, 0.08);
 }
 
 .badge-danger {
   color: #fff;
-  background: var(--red);
+  background: linear-gradient(135deg, var(--red) 0%, #dc2626 100%);
 }
 
 .badge-ok {
   color: #fff;
-  background: var(--green);
+  background: linear-gradient(135deg, var(--green) 0%, #059669 100%);
 }
 
+/* --- Action Rows & Forms --- */
 .action-row {
   display: flex;
   flex-wrap: wrap;
@@ -388,12 +715,20 @@ th {
 .action-row select {
   flex: 1 1 220px;
   min-width: min(220px, 100%);
-  min-height: 42px;
-  padding: 10px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: #fff;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-solid);
+  border-radius: var(--radius);
+  background: var(--paper-solid);
   color: var(--ink);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.action-row input:focus,
+.action-row select:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px var(--teal-light);
+  outline: none;
 }
 
 .action-row button {
@@ -402,40 +737,56 @@ th {
 
 .compact-button {
   min-height: 32px;
-  padding: 6px 10px;
+  padding: 6px 12px;
   font-size: 12px;
 }
 
 .update-ticket-form {
-  margin-bottom: 12px;
-  padding: 12px;
+  margin-bottom: 14px;
+  padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #f8fafc;
+  border-radius: var(--radius);
+  background: var(--wash-alt);
 }
 
 .field {
   display: grid;
   gap: 6px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .field label {
   font-size: 13px;
-  font-weight: 800;
-  color: #344054;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  letter-spacing: -0.01em;
 }
 
 .field input,
 .field select,
 .field textarea {
   width: 100%;
-  min-height: 42px;
-  padding: 10px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: #fff;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-solid);
+  border-radius: var(--radius);
+  background: var(--paper-solid);
   color: var(--ink);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px var(--teal-light);
+  outline: none;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
 }
 
 .field textarea {
@@ -453,53 +804,42 @@ th {
 .inline-check input {
   width: auto;
   min-height: auto;
+  accent-color: var(--teal);
 }
 
-.table-wrap {
-  max-width: 100%;
-  overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 640px;
-}
-
-th,
-td {
-  padding: 11px 10px;
-  text-align: left;
-  border-bottom: 1px solid var(--line);
-}
-
-th {
-  font-size: 12px;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
+/* --- Timeline --- */
 .timeline {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .timeline li {
-  padding: 10px 12px;
-  border-left: 4px solid var(--teal);
-  background: #f8fafc;
+  padding: 10px 14px;
+  border-left: 3px solid var(--teal);
+  background: var(--wash-alt);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 14px;
+  transition: background var(--transition);
 }
 
+.timeline li:hover {
+  background: var(--teal-light);
+}
+
+/* --- Comments --- */
 .comment {
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--radius);
+  background: var(--paper-solid);
+  transition: border-color var(--transition);
+}
+
+.comment:hover {
+  border-color: rgba(14, 165, 233, 0.2);
 }
 
 .comment-header {
@@ -512,40 +852,328 @@ th {
 .comment-header strong {
   min-width: 0;
   overflow-wrap: anywhere;
+  font-weight: 700;
 }
 
 .comment + .comment {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
+/* --- Inventory Rows --- */
 .inventory-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
-  padding: 12px 0;
+  padding: 14px 0;
   border-bottom: 1px solid var(--line);
+  transition: background var(--transition);
+}
+
+.inventory-row:hover {
+  background: var(--wash-alt);
 }
 
 .inventory-row:last-child {
   border-bottom: 0;
 }
 
+/* --- Notice --- */
 .notice {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #f4c27a;
-  background: #fff8ed;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--amber-light);
+  font-size: 14px;
+  color: #92400e;
 }
 
+/* --- Empty State --- */
 .empty-state {
-  padding: 24px;
+  padding: 32px 24px;
   text-align: center;
   color: var(--muted);
-  border: 1px dashed var(--line);
-  border-radius: 8px;
+  border: 1px dashed var(--line-solid);
+  border-radius: var(--radius);
+  font-size: 14px;
 }
 
+/* --- Loading Spinner --- */
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.loading-spinner::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--line-solid);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Skeleton shimmer for loading states */
+.skeleton {
+  background: linear-gradient(90deg, var(--line-solid) 25%, var(--wash) 50%, var(--line-solid) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* --- Toast Notifications --- */
+.toast-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: min(420px, calc(100vw - 40px));
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: var(--paper-solid);
+  border: 1px solid var(--line-solid);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  animation: slideInRight 0.35s var(--transition) both;
+  cursor: pointer;
+  transition: opacity var(--transition), transform var(--transition);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.toast:hover {
+  transform: translateX(-4px);
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 1px;
+}
+
+.toast-body {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.toast-dismiss {
+  animation: fadeOut 0.3s var(--transition) both;
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+.toast-success .toast-icon {
+  background: var(--green-light);
+  color: var(--green);
+}
+
+.toast-error .toast-icon {
+  background: var(--red-light);
+  color: var(--red);
+}
+
+.toast-info .toast-icon {
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
+.toast-warning .toast-icon {
+  background: var(--amber-light);
+  color: var(--amber);
+}
+
+/* --- Modal Overlay --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.6);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-slow), visibility var(--transition-slow);
+}
+
+.modal-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-card {
+  width: min(480px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 28px;
+  background: var(--paper-solid);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  transform: scale(0.92) translateY(12px);
+  transition: transform var(--transition-slow);
+}
+
+.modal-overlay.is-visible .modal-card {
+  transform: scale(1) translateY(0);
+}
+
+.modal-card h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.modal-card p {
+  margin: 0 0 20px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.modal-icon-warning {
+  background: var(--amber-light);
+  color: var(--amber);
+}
+
+.modal-icon-error {
+  background: var(--red-light);
+  color: var(--red);
+}
+
+.modal-icon-info {
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
+.modal-icon-success {
+  background: var(--green-light);
+  color: var(--green);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.modal-actions button {
+  min-width: 100px;
+}
+
+/* --- Inline Banner (replaces Supabase not configured alert) --- */
+.inline-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  animation: slideInDown 0.35s var(--transition) both;
+}
+
+.inline-banner-warning {
+  background: var(--amber-light);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #92400e;
+}
+
+.inline-banner-info {
+  background: var(--blue-light);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #1e40af;
+}
+
+.inline-banner-error {
+  background: var(--red-light);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #991b1b;
+}
+
+/* --- Alert Card (Admin alerts panel) --- */
+.alert-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.alert-card:last-child {
+  border-bottom: 0;
+}
+
+.alert-severity {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 5px;
+}
+
+.alert-severity-critical {
+  background: var(--red);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.alert-severity-warning {
+  background: var(--amber);
+}
+
+.alert-severity-info {
+  background: var(--blue);
+}
+
+/* --- Responsive Breakpoints --- */
 @media (max-width: 860px) {
   .topbar {
     align-items: flex-start;
@@ -554,7 +1182,6 @@ th {
 
   .role-nav {
     top: 126px;
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .hero-grid,
@@ -562,6 +1189,21 @@ th {
   .detail-grid,
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Same specificity as .dashboard-grid's 1fr above, later in the
+     cascade — wins back auto-fit sizing for stat cards specifically, so a
+     tablet gets a sensible 2-up layout instead of 4 cards stacked full-width. */
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  /* .dashboard-grid just dropped to a single explicit column above. Without
+     this, .panel-span-2 still asks to span 2 columns that no longer exist,
+     and the browser invents a phantom implicit one sized from content —
+     this exact reset is what closes the 28px/0px/580px bug. */
+  .panel-span-2 {
+    grid-column: auto;
   }
 
   .ticket-card {
@@ -581,12 +1223,11 @@ th {
   }
 
   .topbar h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .role-nav {
     position: static;
-    grid-template-columns: 1fr 1fr;
     padding: 8px;
   }
 
@@ -595,7 +1236,8 @@ th {
   }
 
   .panel {
-    padding: 14px;
+    padding: 16px;
+    border-radius: var(--radius);
   }
 
   .panel-title {
@@ -631,7 +1273,7 @@ th {
   }
 
   .ticket-meta {
-    gap: 6px;
+    gap: 4px;
   }
 
   .inventory-row {
@@ -641,19 +1283,454 @@ th {
   .inventory-row button {
     width: 100%;
   }
+
+  .toast-container {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+
+  .modal-card {
+    padding: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 380px) {
-  .role-nav {
-    grid-template-columns: 1fr;
-  }
-
   .role-nav a,
   .primary-button,
   .secondary-button,
   .danger-button,
   .ghost-button {
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
+}
+
+/* ============================================================
+   Portal identity — each role gets its own accent, so a glance at
+   the screen tells you which portal you are in.
+   ============================================================ */
+
+body[data-portal="customer"]   { --portal: var(--teal);   --portal-soft: var(--teal-light); }
+body[data-portal="agent"]      { --portal: var(--blue);   --portal-soft: var(--blue-light); }
+body[data-portal="technician"] { --portal: var(--amber);  --portal-soft: var(--amber-light); }
+body[data-portal="admin"]      { --portal: var(--purple); --portal-soft: rgba(139, 92, 246, 0.12); }
+
+body[data-portal] .page-heading .eyebrow {
+  color: var(--portal);
+}
+
+/* A coloured rule under the page title marks the portal. */
+body[data-portal] .page-heading {
+  border-bottom: 3px solid var(--portal);
+  padding-bottom: 14px;
+}
+
+body[data-portal] .topbar .eyebrow {
+  color: var(--portal);
+}
+
+/* Who is signed in, and as what. */
+.portal-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 8px 14px;
+  border: 1px solid var(--line-solid);
+  border-radius: var(--radius-pill);
+  background: var(--paper-solid);
+  box-shadow: var(--shadow-sm);
+}
+
+/* A real name can run long — measured overflow on a 320px phone with a
+   four-word Sri Lankan name, because nowrap here refused to let it break
+   and forced the whole page 146px wider than the viewport. min-width:0 is
+   required alongside overflow-wrap on a flex item — without it the item's
+   default auto min-width holds it to its unwrapped content width. */
+.portal-identity strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.badge-role {
+  background: var(--portal-soft, var(--wash));
+  color: var(--portal, var(--ink));
+  text-transform: capitalize;
+  font-weight: 700;
+}
+
+/* Read-only account details on the customer ticket form. */
+.identity-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 32px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: var(--radius);
+  background: var(--portal-soft, var(--wash));
+  border: 1px solid var(--line);
+}
+
+.identity-strip > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.identity-strip strong {
+  color: var(--ink);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .page-heading {
+    flex-direction: column;
+  }
+
+  .portal-identity {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+}
+
+/* ============================================================
+   Ticket detail — attachments, facts, timeline, callback
+   ============================================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.detail-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px 24px;
+  margin: 18px 0 0;
+}
+
+.detail-facts > div {
+  min-width: 0;
+}
+
+.detail-facts dt {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
+.detail-facts dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ticket-description {
+  margin-top: 20px;
+}
+
+.ticket-description p {
+  white-space: pre-wrap;
+  color: var(--ink-secondary);
+}
+
+/* --- Attachments --- */
+.attachment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.attachment {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line-solid);
+  border-radius: var(--radius);
+  background: var(--paper-solid);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.attachment-photo img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  display: block;
+  background: var(--wash);
+}
+
+.attachment-photo a:focus-visible img {
+  outline: 3px solid var(--portal, var(--teal));
+  outline-offset: 2px;
+}
+
+.attachment-voice audio {
+  width: 100%;
+}
+
+.attachment-broken {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.attachment figcaption,
+.attachment span {
+  overflow-wrap: anywhere;
+}
+
+/* --- Callback --- */
+.callback-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0 0;
+}
+
+/* --- Timeline --- */
+.timeline {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0 0 0 18px;
+  border-left: 2px solid var(--line-solid);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.timeline li {
+  position: relative;
+}
+
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--portal, var(--teal));
+  box-shadow: 0 0 0 3px var(--paper-solid);
+}
+
+.parts-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.parts-list li {
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Comments --- */
+.comment-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.comment-mine {
+  border-left: 3px solid var(--portal, var(--teal));
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comment-form {
+  margin-top: 14px;
+}
+
+.comment-form input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Toolbar, filters, pagination --- */
+.ticket-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.ticket-toolbar input[type="search"] {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.ticket-toolbar select {
+  flex: 0 1 auto;
+}
+
+.pagination {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* The escape hatch below a 5-card dashboard preview, to the real list. */
+.ticket-list-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.ticket-list-more a {
+  width: min(100%, 320px);
+}
+
+/* --- Inline action + status row (e.g. the GPS location button) --- */
+.recorder-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0 0 0 6px;
+  color: var(--portal, var(--teal));
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.edit-block summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 8px 0;
+  color: var(--ink-secondary);
+}
+
+.edit-block[open] summary {
+  margin-bottom: 8px;
+}
+
+/* --- Focus visibility: keyboard users could not see where they were --- */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--portal, var(--teal));
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .attachment-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .ticket-toolbar input[type="search"],
+  .ticket-toolbar select {
+    flex: 1 1 100%;
+  }
+
+  .comment-thread {
+    max-height: none;
+  }
+}
+
+/* ============================================================
+   Resolution receipts
+   ============================================================ */
+
+.mono {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The receipt modal carries more structure than a confirmation dialog, so
+   it gets a bit more room than the default 480px modal card. */
+#modalCard:has(.receipt) {
+  width: min(560px, 100%);
+}
+
+.receipt-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.receipt-head h3 {
+  margin: 4px 0 0;
+  font-size: 22px;
+}
+
+.receipt .detail-facts {
+  margin: 0 0 4px;
+}
+
+.receipt hr {
+  border: none;
+  border-top: 1px solid var(--line-solid);
+  margin: 16px 0;
+}
+
+/* --- Video attachments (customer video-clip evidence) --- */
+.attachment-video video {
+  width: 100%;
+  max-height: 220px;
+  border-radius: var(--radius-sm);
+  background: #000;
+  display: block;
 }

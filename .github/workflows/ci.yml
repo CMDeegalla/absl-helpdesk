@@ -1,0 +1,33 @@
+name: CI
+
+# Runs on every push and every pull request against main - the two gates
+# that matter for a project with no framework/bundler to catch mistakes at
+# compile time. Neither step touches Supabase or any live credential; both
+# run entirely against the checked-out repo.
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm install
+
+      # tests/helpers.test.mjs - the pure-function layer (validation,
+      # formatting, filtering). Catches a broken helper before it ships.
+      - run: npm test
+
+      # Runs scripts/build-dist.js, which itself refuses to exit 0 if any
+      # .sql/.bak/.original file or node_modules ends up in dist/ - so this
+      # step is also the check that a public deploy will not leak anything
+      # it shouldn't, not just that the build completes.
+      - run: npm run build

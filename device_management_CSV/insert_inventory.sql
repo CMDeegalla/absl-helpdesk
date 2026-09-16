@@ -1,0 +1,28 @@
+-- SQL Seed script for ABSL Fingerprint Device Inventory
+-- Run this in your Supabase SQL Editor to import the cleaned inventory.
+
+INSERT INTO public.inventory_items (sku, name, category, quantity_on_hand, reorder_level, unit_cost)
+VALUES
+  ('FP-X628-P1', 'Fingerprint Device X628 (Power Fault)', 'Fingerprint Device', 1, 5, 4500),
+  ('FP-X628-W', 'Fingerprint Device X628 (Fully Working)', 'Fingerprint Device', 50, 5, 15000),
+  ('FP-X628-U1', 'Fingerprint Device X628 (Unclassified)', 'Fingerprint Device', 2, 5, 3000),
+  ('FP-X628-D1', 'Fingerprint Device X628 (Display Fault Group 1)', 'Fingerprint Device', 7, 5, 6000),
+  ('FP-X628-K1', 'Fingerprint Device X628 (Keypad Fault)', 'Fingerprint Device', 3, 5, 5500),
+  ('FP-TX628-W', 'Fingerprint Device TX628 (Fully Working)', 'Fingerprint Device', 15, 5, 15000),
+  ('FP-X628-S1', 'Fingerprint Device X628 (Sensor Fault)', 'Fingerprint Device', 16, 5, 5000),
+  ('FP-iClock3000-P1', 'Fingerprint Device iClock3000 (Power Fault)', 'Fingerprint Device', 1, 5, 4500),
+  ('FP-X628C-W', 'Fingerprint Device X628-C (Fully Working)', 'Fingerprint Device', 12, 5, 15000),
+  ('FP-X628C-S1', 'Fingerprint Device X628-C (Sensor Fault)', 'Fingerprint Device', 7, 5, 5000),
+  ('FP-TX628-S1', 'Fingerprint Device TX628 (Sensor Fault)', 'Fingerprint Device', 2, 5, 5000),
+  ('FP-iClock700-W', 'Fingerprint Device iClock700 (Fully Working)', 'Fingerprint Device', 1, 5, 15000),
+  ('FP-TX628-P1', 'Fingerprint Device TX628 (Power Fault)', 'Fingerprint Device', 1, 5, 4500),
+  ('FP-SlikFP100TA-W', 'Fingerprint Device SlikFP 100TA (Fully Working)', 'Fingerprint Device', 1, 5, 15000),
+  ('FP-TX628-U1', 'Fingerprint Device TX628 (Unclassified)', 'Fingerprint Device', 1, 5, 3000),
+  ('FP-G1-W', 'Fingerprint Device G1 (Fully Working)', 'Fingerprint Device', 1, 5, 15000),
+  ('FP-X628-D2', 'Fingerprint Device X628 (Display Fault Group 2)', 'Fingerprint Device', 7, 5, 6000),
+  ('FP-X628-D3', 'Fingerprint Device X628 (Display Fault Group 3)', 'Fingerprint Device', 7, 5, 6000),
+  ('FP-X628Plus-S1', 'Fingerprint Device X628 Plus (Sensor Fault)', 'Fingerprint Device', 1, 5, 5000),
+  ('FP-K14-P1', 'Fingerprint Device K14 (Power Fault)', 'Fingerprint Device', 1, 5, 4500),
+  ('FP-X628-D4', 'Fingerprint Device X628 (Display Fault Group 4)', 'Fingerprint Device', 6, 5, 6000),
+  ('FP-X628Plus-U1', 'Fingerprint Device X628 Plus (Unclassified)', 'Fingerprint Device', 1, 5, 3000),
+  ('FP-GenericFP-Unassigned', 'Fingerprint Device GenericFP (Unassigned)', 'Fingerprint Device', 106, 5, 2000);

@@ -1,201 +1,98 @@
 # ABSL Helpdesk
 
-This is a mobile-responsive helpdesk web app for Automated Barcode Solutions Pvt Ltd.
-It follows the uploaded sequence diagrams as project requirements:
+Client support, field service and helpdesk platform for
+**Automated Barcode Solutions (Pvt) Ltd**.
 
-- customer registration and approval
-- role dashboards for customer, agent, technician, and admin
-- ticket creation with photo, voice note, callback, comments, and status changes
-- technician assignment and inventory use
-- atomic inventory decrement in Supabase
-- realtime-ready ticket/comment data
-- notification queue, retry, and dead-letter handling
-- inventory CSV cleanup and migration
+Four role portals over one Supabase project: customers raise tickets with
+photos, voice notes and a GPS pin; agents triage, reply and dispatch;
+technicians work assigned jobs and draw parts from stock; the CEO console
+handles approvals, account limits and platform health.
 
-## 1. Open The App
+| Document | Read it when |
+|---|---|
+| [AUDIT_REPORT.md](AUDIT_REPORT.md) | You want the full pre-launch review and what was fixed |
+| [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) | You are deploying — **follow this, not the notes below** |
 
-Open `index.html` in a browser after Supabase is configured.
+---
 
-Edit `config.js` with the Supabase project URL and anon public key:
+## Run it locally
+
+```bash
+npm install
+```
+
+```bash
+npm start
+```
+
+Then open <http://localhost:4173/login.html>.
+
+Point it at a Supabase project by editing `config.js`:
 
 ```js
 window.ABSL_SUPABASE = {
   url: "https://YOUR_PROJECT.supabase.co",
-  anonKey: "YOUR_SUPABASE_ANON_KEY"
+  anonKey: "YOUR_PUBLISHABLE_KEY"
 };
 ```
 
-## 2. Create Supabase Project
+The publishable key is designed to be visible in a browser. Access is
+controlled by row-level security in the database, not by hiding this key. If
+the project URL changes, update it in `config.js`, `_headers` and `vercel.json`.
 
-1. Go to Supabase and create a new project.
-2. Open SQL Editor.
-3. Copy everything from:
-
-```text
-supabase/migrations/0001_initial_schema.sql
-```
-
-4. Run the SQL.
-5. Create these Storage buckets:
-
-```text
-ticket-photos
-ticket-voice-notes
-inventory-csv-imports
-```
-
-6. Enable Realtime for:
-
-```text
-tickets
-ticket_comments
-notifications
-```
-
-## 3. App Roles
-
-The app has four role dashboards:
-
-- Customer: create tickets, view own tickets, reply, request callback
-- Agent: view ticket queue, update status, comment, assign technician
-- Technician: view assigned jobs, press Work button, consume inventory
-- Admin: approve/reject users, increase company limits, retry notifications
-
-Registration supports all email addresses. Customers are approved automatically.
-Agent, technician, and admin requests are routed by the role stored in
-`profiles.role`; staff/admin accounts should be approved by ABSL.
-
-To create the first admin, run this once in Supabase SQL Editor after that user
-registers:
-
-```sql
-update public.profiles
-set role = 'admin',
-    approval_status = 'approved'
-where email = 'your-admin-email@example.com';
-```
-
-Replace `your-admin-email@example.com` with the real admin email.
-
-## 4. Important Supabase Functions
-
-The migration includes:
-
-```sql
-public.change_ticket_status(ticket_id, new_status, expected_version)
-```
-
-Use this to prevent two agents from overwriting the same ticket.
-
-```sql
-public.consume_inventory(ticket_id, inventory_item_id, quantity)
-```
-
-Use this when a technician presses the Work button. It locks the inventory row
-and stops stock from going below zero.
-
-## 5. Notification Sending
-
-The Edge Function is here:
-
-```text
-supabase/functions/send-notifications/index.ts
-```
-
-Set these Supabase secrets:
+## Tests
 
 ```bash
-supabase secrets set RESEND_API_KEY=your_resend_key
-supabase secrets set FROM_EMAIL=helpdesk@automatedbarcode.net
+npm test
 ```
 
-Deploy it:
+25 unit tests over `helpers.js` — escaping, upload rules, role permissions,
+search, phone validation, error mapping. The manual pass for the full
+workflows is step 6 of the launch checklist.
 
-```bash
-supabase functions deploy send-notifications
-```
+## Database
 
-Run it from a cron job every few minutes. It sends pending email notifications,
-retries failed ones, and moves permanently failed records to `dead_letter`.
+Apply in order, in the Supabase SQL editor:
 
-## 6. Inventory CSV Cleanup
+| File | Contents |
+|---|---|
+| `supabase/migrations/0001_initial_schema.sql` | Tables, RLS, ticket versioning, atomic stock decrement |
+| `supabase/migrations/0002_production_ready.sql` | Signup trigger, admin alerts, missing policies |
+| `supabase/migrations/0003_security_hardening.sql` | Privilege-escalation fixes, write policies, private storage |
+| `supabase/migrations/0004_feature_completion.sql` | Callbacks, reassignment, GPS, attachments, audit trail, indexes |
 
-Clean old inventory spreadsheets before importing:
+Staff accounts are **not** created by signing up. Everyone registers as a
+customer; an administrator grants agent, technician or admin. The first
+administrator is made with `supabase/bootstrap_staff.sql`.
+
+## Notification worker
+
+`supabase/functions/send-notifications/index.ts` claims a batch of pending
+emails, sends them through Resend, retries with exponential backoff, and
+escalates permanent failures to the CEO console. Run it on a five-minute
+schedule. Secrets: `RESEND_API_KEY`, `FROM_EMAIL`, `WORKER_SECRET`.
+
+## Inventory import
 
 ```bash
 node scripts/import_inventory_csv.js old_inventory.csv cleaned_inventory.csv
 ```
 
-It creates:
+Produces a cleaned file and a rejects file. Import the cleaned one into
+`inventory_items`.
 
-```text
-cleaned_inventory.csv
-cleaned_inventory_rejects.csv
+## Layout
+
 ```
-
-Import `cleaned_inventory.csv` into `inventory_items`.
-
-## 7. Git Steps
-
-Initialize the project:
-
-```bash
-git init
-git add .
-git commit -m "Initial ABSL helpdesk"
+helpers.js              pure logic, unit tested, loaded before app.js
+app.js                  views, state, data access
+styles.css              design system and portal theming
+customer|agent|technician|admin.html    the four role portals
+login|register|index|404.html           public pages
+vendor/                 pinned Supabase client, served from this site
+supabase/migrations/    schema, security, features
+supabase/functions/     notification worker
+scripts/                one-off inventory tooling
+tests/                  npm test
+_headers, netlify.toml, vercel.json     security headers and hosting config
 ```
-
-Create GitHub repository, then:
-
-```bash
-git remote add origin https://github.com/YOUR_USERNAME/absl-helpdesk.git
-git branch -M main
-git push -u origin main
-```
-
-Use branches for each module:
-
-```bash
-git checkout -b feature/auth
-git checkout -b feature/ticketing
-git checkout -b feature/admin-approval
-git checkout -b feature/technician-inventory
-git checkout -b feature/notifications
-git checkout -b feature/mobile-ui
-```
-
-After every completed feature:
-
-```bash
-git add .
-git commit -m "Describe the completed feature"
-git push
-```
-
-For the current company-ready page and CRUD update branch:
-
-```bash
-git add index.html login.html register.html customer.html agent.html technician.html admin.html app.js styles.css README.md supabase/migrations/0002_role_based_registration.sql
-git commit -m "Make helpdesk production ready with separate pages and CRUD actions"
-git push -u origin feature/separate-web-pages
-```
-
-## 8. Suggested Build Order
-
-1. Supabase schema
-2. Authentication
-3. Registration and approval
-4. Customer ticket creation
-5. File upload for photos and voice notes
-6. Customer ticket detail and comments
-7. Agent dashboard
-8. Status update and conflict protection
-9. Technician dashboard
-10. Inventory Work button
-11. Admin approval screens
-12. Company account limits
-13. Notification worker
-14. Realtime subscriptions
-15. CSV import tool
-16. Mobile testing
-
