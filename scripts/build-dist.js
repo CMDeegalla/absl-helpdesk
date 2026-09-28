@@ -28,6 +28,7 @@ const files = [
   "technician.html",
   "admin.html",
   "tickets.html",
+  "help.html",
   "approvals.html",
   "staff-roles.html",
   "notifications.html",

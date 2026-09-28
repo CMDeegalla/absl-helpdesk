@@ -1810,3 +1810,205 @@ body[data-portal] .topbar .eyebrow {
   background: #000;
   display: block;
 }
+
+/* ============================================================
+   User Guide (help.html) and first-login welcome tour
+   ============================================================ */
+.guide {
+  display: grid;
+  gap: 18px;
+}
+
+.guide-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.guide-chip {
+  padding: 8px 14px;
+  border: 1px solid var(--line-solid);
+  border-radius: var(--radius-pill);
+  background: var(--paper-solid);
+  color: var(--ink-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+}
+
+.guide-chip:hover {
+  border-color: var(--portal, var(--teal));
+  color: var(--portal, var(--teal-dark));
+}
+
+.guide-chip-accent {
+  border-color: var(--portal, var(--teal));
+  background: var(--portal-soft, var(--teal-light));
+  color: var(--ink);
+}
+
+/* Clears the sticky top bar and portal bar when a chip scrolls here. */
+.guide-section {
+  scroll-margin-top: 150px;
+}
+
+.guide-section > h2 {
+  margin-bottom: 8px;
+}
+
+.guide-section > p,
+.guide-section > .muted {
+  margin: 8px 0 14px;
+}
+
+.guide-section h3 {
+  margin: 18px 0 6px;
+}
+
+.guide-steps,
+.guide-list {
+  margin: 8px 0 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 8px;
+}
+
+.guide-steps li::marker {
+  color: var(--portal, var(--teal));
+  font-weight: 800;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.guide-card {
+  padding: 14px 16px;
+  border: 1px solid var(--line-solid);
+  border-left: 4px solid var(--portal, var(--teal));
+  border-radius: var(--radius);
+  background: var(--wash-alt);
+}
+
+.panel .guide-card h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.guide-card p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-secondary);
+}
+
+.guide-role {
+  margin-top: 10px;
+  padding: 0 16px;
+  border: 1px solid var(--line-solid);
+  border-radius: var(--radius);
+  background: var(--paper-solid);
+}
+
+.guide-role summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guide-role[open] {
+  padding-bottom: 14px;
+}
+
+.guide-role[open] summary {
+  border-bottom: 1px solid var(--line-solid);
+  margin-bottom: 10px;
+}
+
+.guide-role > p {
+  margin: 0 0 8px;
+}
+
+.guide-statuses {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.guide-status {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.guide-status p {
+  margin: 0;
+}
+
+.guide-contact {
+  margin-top: 16px;
+}
+
+.guide-contact a {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.guide-footer {
+  justify-content: center;
+}
+
+@media (max-width: 520px) {
+  .guide-status {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+/* --- Welcome tour (shares the modal overlay) --- */
+.tour-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.tour-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.tour-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--line-solid);
+  transition: all var(--transition);
+}
+
+.tour-dots span.is-active {
+  width: 22px;
+  background: var(--portal, var(--teal));
+}
+
+.tour-actions {
+  flex-wrap: wrap;
+}
+
+.tour-actions a {
+  min-width: 100px;
+}
+
+.tour-actions [data-tour-skip],
+.tour-actions [data-tour-guide] {
+  margin-right: auto;
+}

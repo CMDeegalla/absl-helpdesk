@@ -711,6 +711,224 @@ function showConfirm(message, title = "Confirm Action") {
   });
 }
 
+// --- First-login welcome tour ------------------------------------------
+// Shown once per account per role - a promotion earns the new role's tour -
+// the first time someone lands on their own dashboard. It's a UI nicety,
+// so "seen" lives in localStorage: a new device shows it once more, and a
+// browser that blocks storage shows it once per page load.
+let welcomeTourShownThisLoad = false;
+
+function welcomeTourKey(role) {
+  return `absl-welcome-tour:${currentProfile?.id || "anon"}:${role}`;
+}
+
+function hasSeenWelcomeTour(role) {
+  try {
+    return localStorage.getItem(welcomeTourKey(role)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markWelcomeTourSeen(role) {
+  try {
+    localStorage.setItem(welcomeTourKey(role), "1");
+  } catch {
+    // Storage blocked - the once-per-load flag still stops it repeating.
+  }
+}
+
+const WELCOME_TOUR_ROLE_STEPS = {
+  customer: [
+    {
+      title: "Raise a ticket",
+      body: "Use **Create New Ticket**: pick the job type, describe the problem (tick any common problems that apply), set the priority and site location, then press **Submit Ticket**. Tick **Need phone callback?** if you'd rather talk to someone."
+    },
+    {
+      title: "Follow it up",
+      body: "Your tickets are listed in **My Tickets**. Click one and its full detail opens below — status, photos, and a conversation where you can reply to ABSL. We email you whenever something changes."
+    }
+  ],
+  technician: [
+    {
+      title: "Your jobs",
+      body: "**My Jobs** lists everything assigned to you. When a job is released to every technician it appears in **Open Jobs** — open it and assign it to yourself to take it. First to accept gets it."
+    },
+    {
+      title: "Working a job",
+      body: "Click a job to open it below. Press **In Progress** when you start, add photos, and keep the customer updated in the conversation. **Resolved** asks for the service call number, your notes and a receipt photo."
+    },
+    {
+      title: "Log a Job",
+      body: "**➕ Log a Job** is for work that didn't come through the portal — a customer who phoned you, or a job you need to do yourself. Tick **This is my own job** and it's assigned to you; hand it to a colleague from the job if you can't take it."
+    }
+  ],
+  agent: [
+    {
+      title: "Ticket Queue",
+      body: "Every ticket, searchable and filterable. **Waiting for a technician** in the summary cards counts jobs nobody has yet. Click a ticket to open it below the queue."
+    },
+    {
+      title: "Dispatching",
+      body: "In an open ticket, choose a technician under **Technician** and press **Assign** (they're emailed), or press **Release to all technicians** to let the first available one take it. Reply in the conversation and move the status as work goes on."
+    },
+    {
+      title: "Callbacks, phone-ins and reports",
+      body: "**Callback Queue** lists customers waiting for a call — call, then press **Done**. **➕ Log a Job** records a phone-in. **Reports** searches every job."
+    }
+  ],
+  operator: [
+    {
+      title: "Ticket Queue",
+      body: "Every ticket, searchable and filterable. **Waiting for a technician** in the summary cards counts jobs nobody has yet. Click a ticket to open it below the queue."
+    },
+    {
+      title: "Dispatching jobs",
+      body: "Open an unassigned ticket and press **Release to all technicians** — every technician sees it and the first to accept gets it. Naming one specific technician is done by an agent or the CEO."
+    },
+    {
+      title: "Phone-ins, callbacks and alerts",
+      body: "**➕ Log a Job** records work that didn't come through the portal — tick **Open it to every technician** to release it straight away. Work the **Callback Queue**, and **Acknowledge** each **System Alert** once it's handled."
+    }
+  ],
+  admin: [
+    {
+      title: "Approving people",
+      body: "**User Approvals** lists new registrations. Choose the role to grant from the dropdown, then press **Approve** (or **Reject**). Applicants are emailed the decision."
+    },
+    {
+      title: "Managing staff",
+      body: "**Manage Staff** changes any account's role — promote a customer to technician, or make someone an agent or operator. Your own role can only be changed from a second admin account."
+    },
+    {
+      title: "Keeping watch",
+      body: "**Company Limit**, **Notifications**, **System Alerts**, **Resolution Receipts** and **Client Errors** keep the platform healthy. The portal bar lets you open any portal to see it as that role does."
+    }
+  ]
+};
+
+function welcomeTourSteps(role) {
+  const firstName = String(currentProfile?.full_name || "").trim().split(/\s+/)[0];
+  const portalName = portals[role]?.name || "dashboard";
+
+  return [
+    {
+      title: firstName ? `Welcome to ABSL Helpdesk, ${firstName}` : "Welcome to ABSL Helpdesk",
+      body: `This is your **${portalName}**. Here's a one-minute tour of where everything is. You can skip it and replay it any time from **Help** at the top of the page.`
+    },
+    {
+      title: "Finding your way around",
+      body:
+        role === "admin"
+          ? "The dark bar at the top shows your connection status, **Help** and **Sign Out**. Below it, the portal bar lists every portal — you can open any of them. Summary cards at the top of each dashboard show what needs attention."
+          : "The dark bar at the top shows your connection status, **Help** and **Sign Out**. Below it, the portal bar shows your portal. Summary cards at the top show what needs attention, and your role and name are always on the right."
+    },
+    ...(WELCOME_TOUR_ROLE_STEPS[role] || []),
+    {
+      title: "You're all set",
+      body: "The full **User Guide** — a walkthrough for every role and answers to common questions — is always under **Help** at the top of the page."
+    }
+  ];
+}
+
+function maybeShowWelcomeTour(route) {
+  if (welcomeTourShownThisLoad) return;
+  if (!currentUser || !currentProfile || currentProfile.approval_status !== "approved") return;
+  // Only on the person's own desk - not while the CEO is viewing another
+  // portal, where that portal's tour would describe someone else's job.
+  if (route !== dashboardRouteForRole()) return;
+  if (hasSeenWelcomeTour(route)) return;
+
+  const overlay = document.getElementById("modalOverlay");
+  if (!overlay || overlay.classList.contains("is-visible")) return;
+
+  welcomeTourShownThisLoad = true;
+  openWelcomeTour(route);
+}
+
+function openWelcomeTour(role = dashboardRouteForRole()) {
+  const overlay = document.getElementById("modalOverlay");
+  const card = document.getElementById("modalCard");
+  if (!overlay || !card) return;
+
+  const steps = welcomeTourSteps(role);
+  let index = 0;
+
+  const close = () => {
+    markWelcomeTourSeen(role);
+    document.removeEventListener("keydown", onKeydown);
+    overlay.classList.remove("is-visible");
+  };
+
+  const onKeydown = (event) => {
+    if (event.key === "Escape") close();
+  };
+
+  const draw = () => {
+    const step = steps[index];
+    const isFirst = index === 0;
+    const isLast = index === steps.length - 1;
+
+    card.innerHTML = `
+      <div class="tour" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+        <div class="tour-progress">
+          <span class="small muted">Step ${index + 1} of ${steps.length}</span>
+          <span class="tour-dots" aria-hidden="true">
+            ${steps.map((_, i) => `<span class="${i === index ? "is-active" : ""}"></span>`).join("")}
+          </span>
+        </div>
+        <h3 id="tourTitle">${escapeHtml(step.title)}</h3>
+        <p>${guideText(step.body)}</p>
+        <div class="modal-actions tour-actions">
+          ${
+            isLast
+              ? `<a class="secondary-button" href="help.html" data-tour-guide>Open the User Guide</a>`
+              : `<button class="secondary-button" type="button" data-tour-skip>Skip tour</button>`
+          }
+          ${isFirst ? "" : `<button class="secondary-button" type="button" data-tour-back>Back</button>`}
+          <button class="primary-button" type="button" data-tour-next>${isLast ? "Get started" : "Next"}</button>
+        </div>
+      </div>
+    `;
+
+    card.querySelector("[data-tour-next]").onclick = () => {
+      if (isLast) {
+        close();
+        return;
+      }
+      index += 1;
+      draw();
+    };
+
+    const back = card.querySelector("[data-tour-back]");
+    if (back) {
+      back.onclick = () => {
+        index -= 1;
+        draw();
+      };
+    }
+
+    const skip = card.querySelector("[data-tour-skip]");
+    if (skip) skip.onclick = close;
+
+    // Let the link navigate normally; just record the tour as seen first.
+    const guideLink = card.querySelector("[data-tour-guide]");
+    if (guideLink) guideLink.onclick = () => markWelcomeTourSeen(role);
+
+    // The overlay's visibility transition still counts as hidden in its
+    // first instant, so a focus in the same tick as opening can miss.
+    const next = card.querySelector("[data-tour-next]");
+    next.focus();
+    if (document.activeElement !== next) setTimeout(() => next.focus(), 60);
+  };
+
+  document.addEventListener("keydown", onKeydown);
+  // Visible before drawing: draw() focuses the Next button, and an element
+  // inside a still-hidden overlay can't take focus.
+  overlay.classList.add("is-visible");
+  draw();
+}
+
 function loadState() {
   const saved = localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey);
   if (!saved) return structuredClone(initialState);
@@ -901,6 +1119,10 @@ function currentCompany() {
 // filename in the first place.
 const extraAuthedRoutes = ["tickets", "reset-password"];
 
+// Open to everyone, signed in or not - a first-time visitor needs the user
+// guide before they've even registered.
+const openRoutes = ["help"];
+
 // Full-list pages behind the four admin dashboard panels that used to
 // render every row in place (User Approvals, Notifications, Admin System
 // Alerts, Resolution Receipts). Unlike extraAuthedRoutes, these need more
@@ -919,6 +1141,7 @@ function currentRoute() {
     publicRoutes.includes(pageName) ||
     dashboardRoutes.includes(pageName) ||
     extraAuthedRoutes.includes(pageName) ||
+    openRoutes.includes(pageName) ||
     adminOnlyExtraRoutes.includes(pageName) ||
     staffReportRoutes.includes(pageName)
   ) {
@@ -945,7 +1168,7 @@ function allowedDashboardRoutes() {
 }
 
 function canAccessRoute(route) {
-  if (publicRoutes.includes(route)) return true;
+  if (publicRoutes.includes(route) || openRoutes.includes(route)) return true;
   if (extraAuthedRoutes.includes(route)) return Boolean(currentUser);
   if (adminOnlyExtraRoutes.includes(route)) return Boolean(currentUser) && userRole() === "admin";
   if (staffReportRoutes.includes(route)) return Boolean(currentUser) && ["agent", "admin"].includes(userRole());
@@ -971,6 +1194,7 @@ function routeLabel(route) {
     technician: portals.technician.name,
     admin: portals.admin.name,
     tickets: "My Tickets",
+    help: "User Guide",
     approvals: "User Approvals",
     "staff-roles": "Manage Staff",
     notifications: "Notifications",
@@ -2404,14 +2628,17 @@ async function loadStaffDirectory() {
   });
 }
 
+// staff_directory, not profiles: a technician can only read their own
+// profile row, so querying profiles left their hand-over dropdown with no
+// colleagues in it. The view is readable by every signed-in user and
+// exposes only id, name and role of approved staff.
 async function loadRealTechnicians() {
   if (!supabaseClient) return;
 
   const { data, error } = await supabaseClient
-    .from("profiles")
-    .select("id, full_name, email")
+    .from("staff_directory")
+    .select("id, full_name")
     .eq("role", "technician")
-    .eq("approval_status", "approved")
     .order("full_name", { ascending: true });
 
   if (error) {
@@ -2421,7 +2648,7 @@ async function loadRealTechnicians() {
 
   state.technicians = (data || []).map((profile) => ({
     id: profile.id,
-    name: profile.full_name || profile.email
+    name: profile.full_name
   }));
 }
 
@@ -4152,10 +4379,435 @@ function pendingApprovalPage() {
       <article class="panel auth-card">
         <p class="auth-kicker">Account pending</p>
         <h2>Waiting for admin approval</h2>
-        <p class="muted">Your account exists, but an ABSL admin must approve it before you can open the dashboard.</p>
-        <button class="secondary-button" type="button" id="signOutBtn">Sign Out</button>
+        <p class="muted">Your account exists, but an ABSL admin must approve it before you can open the dashboard. You'll get an email as soon as they do.</p>
+        <div class="action-row">
+          <a class="secondary-button" href="help.html">Read the user guide</a>
+          <button class="secondary-button" type="button" id="signOutBtn">Sign Out</button>
+        </div>
       </article>
     </section>
+  `;
+}
+
+// --- User Guide (help.html) --------------------------------------------
+const SUPPORT_EMAIL = "helpdesk@automatedbarcode.net";
+
+// Guide copy is static text with **bold** for on-screen labels. Escaped
+// first, then only the ** pairs become <strong>, so no other markup can
+// ever get through.
+function guideText(text) {
+  return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
+
+const GUIDE_NAVIGATION = [
+  {
+    title: "Top bar",
+    body: "The dark bar at the very top: your connection status (**Connected** or **Offline**), **Help** (this guide) and **Sign Out**."
+  },
+  {
+    title: "Portal bar",
+    body: "Just below it: the portal you're in — Customer, Agent, Operator, Technician or CEO Console. Most people only see their own. The CEO sees all five."
+  },
+  {
+    title: "Page header",
+    body: "Your portal's name and what it's for, with your role and name on the right — so you always know which account you're signed in to."
+  },
+  {
+    title: "Summary cards",
+    body: "The numbers at the top of your dashboard: open tickets, jobs waiting for a technician, unread alerts and so on. A quick look at what needs attention."
+  },
+  {
+    title: "Lists and search",
+    body: "Every ticket list has a search box plus status and priority filters. **See all** opens the complete list when there are more than fit on the dashboard."
+  },
+  {
+    title: "Ticket detail",
+    body: "Click any ticket and its full detail opens **below the lists** — scroll down. Status buttons, assigning, photos, replies and history are all in there."
+  }
+];
+
+const ROLE_GUIDES = [
+  {
+    role: "customer",
+    title: "Customer Portal",
+    summary: "For customers reporting a problem and following it through to the fix.",
+    tasks: [
+      {
+        title: "Raise a ticket",
+        steps: [
+          "In **Create New Ticket**, choose the **Job Type**: Service, Fault or Installation.",
+          "Add the **Department** that has the problem if it helps us find it (optional).",
+          "Write a short **Problem Summary**, tick any **Common Problems** that apply, and add any other details.",
+          "Set the **Priority** and the site **Location**. On a phone, **📍 Use my location** fills in your GPS position.",
+          "If someone else will meet the technician on site, add their **Site contact number**.",
+          "Tick **Need phone callback?** if you'd rather talk to someone, then press **Submit Ticket**."
+        ]
+      },
+      {
+        title: "Follow your tickets",
+        steps: [
+          "Every ticket you raise is listed in **My Tickets** with its current status.",
+          "Click a ticket to open its full detail below the lists: the facts, photos, technician, conversation and history.",
+          "Use the search box and filters to find an older ticket, or **See all** for the full list."
+        ]
+      },
+      {
+        title: "Talk to ABSL",
+        steps: [
+          "Reply in the **Conversation** box at the bottom of a ticket. We email you whenever ABSL replies.",
+          "Prefer a phone call? Use **Prefer a phone call?** on the right of the ticket and enter your number."
+        ]
+      },
+      {
+        title: "Change or close a ticket",
+        steps: [
+          "While a ticket is still **New**, open **Edit ticket details** to correct it.",
+          "When the job is done you'll get an email with the resolution notes and the service call number. Press **Closed** once you're happy."
+        ]
+      }
+    ]
+  },
+  {
+    role: "technician",
+    title: "Technician Field App",
+    summary: "For ABSL field technicians: your jobs, the open job pool, and logging your own work.",
+    tasks: [
+      {
+        title: "Take a job from Open Jobs",
+        steps: [
+          "**Open Jobs** appears at the top of your page whenever a job has been released to every technician.",
+          "Click the job, choose your own name under **Technician → Assign or hand over**, and press **Assign**. The first technician to accept it gets it."
+        ]
+      },
+      {
+        title: "Work your jobs",
+        steps: [
+          "**My Jobs** lists every job assigned to you. Click one to open it.",
+          "Press **In Progress** when you start. Tap the site contact number to call, or **Open map** to find the site.",
+          "Add photos as you go with **Add photo**, and keep the customer updated in the **Conversation**."
+        ]
+      },
+      {
+        title: "Resolve a job",
+        steps: [
+          "Press **Resolved**. You'll be asked for the **service call number**, your **resolution notes** and a **photo of the service call receipt** — all three are required.",
+          "The customer is emailed your notes and the service call number."
+        ]
+      },
+      {
+        title: "Hand a job to a colleague",
+        steps: [
+          "Open the job, choose the colleague under **Assign or hand over**, add a reason, and press **Reassign**. The hand-over note appears in the conversation."
+        ]
+      },
+      {
+        title: "Log a job",
+        steps: [
+          "Press **➕ Log a Job** for work that didn't come through the portal.",
+          "A customer phoned you: enter the company, the caller's name and phone, the job type and the problem.",
+          "A job you need to do yourself, with no caller: tick **This is my own job** — it's assigned to you straight away.",
+          "Can't take it right now? Tick **Open it to every technician** instead, and it goes to Open Jobs."
+        ]
+      }
+    ]
+  },
+  {
+    role: "agent",
+    title: "Agent Desk",
+    summary: "For ABSL agents: triaging the queue, assigning technicians and keeping customers answered.",
+    tasks: [
+      {
+        title: "Work the Ticket Queue",
+        steps: [
+          "The **Ticket Queue** lists every ticket, fully searchable. **Waiting for a technician** in the summary cards counts open jobs nobody has yet.",
+          "Click a ticket to open it below the queue."
+        ]
+      },
+      {
+        title: "Assign or dispatch",
+        steps: [
+          "To give a job to one person: under **Technician**, choose them and press **Assign**. They're emailed straight away.",
+          "To let the first available technician take it: press **Release to all technicians** under **Dispatch**."
+        ]
+      },
+      {
+        title: "Keep the customer informed",
+        steps: [
+          "Reply in the **Conversation** — the customer is emailed. Move the ticket along with the **Status** buttons."
+        ]
+      },
+      {
+        title: "Callbacks and phone-ins",
+        steps: [
+          "The **Callback Queue** lists customers waiting for a call. Press **Call** (on a phone), then **Done** once you've spoken.",
+          "Use **➕ Log a Job** for a customer who phoned instead of using the portal."
+        ]
+      },
+      {
+        title: "Reports",
+        steps: [
+          "**Reports** searches every job by customer, service call number, date, status, priority, technician or job type."
+        ]
+      }
+    ]
+  },
+  {
+    role: "operator",
+    title: "Operator Desk",
+    summary: "For ABSL operators: dispatching unassigned jobs, logging phone-ins and watching system alerts.",
+    tasks: [
+      {
+        title: "Check what's waiting",
+        steps: [
+          "The **Ticket Queue** lists every ticket. **Waiting for a technician** in the summary cards counts unassigned open jobs.",
+          "Click a ticket to open it below the queue."
+        ]
+      },
+      {
+        title: "Dispatch to technicians",
+        steps: [
+          "Open an unassigned ticket and press **Release to all technicians** under **Dispatch**. Every technician sees it in Open Jobs, and the first to accept gets it.",
+          "To give a job to one named technician, ask an agent or the CEO."
+        ]
+      },
+      {
+        title: "Log phone-in and internal jobs",
+        steps: [
+          "Press **➕ Log a Job**. Tick **Open it to every technician** to release it straight away.",
+          "For work nobody called in about, tick **This is a job nobody called in for** — no caller details needed."
+        ]
+      },
+      {
+        title: "Callbacks",
+        steps: ["Work the **Callback Queue**: call the customer, then press **Done**."]
+      },
+      {
+        title: "System alerts",
+        steps: [
+          "**System Alerts** shows problems such as emails that could not be sent. Press **Acknowledge** once each one is handled."
+        ]
+      }
+    ]
+  },
+  {
+    role: "admin",
+    title: "CEO Console",
+    summary: "For the CEO / administrator: approving people, managing staff roles and keeping the platform healthy.",
+    tasks: [
+      {
+        title: "Approve new accounts",
+        steps: [
+          "**User Approvals** lists new registrations waiting for review.",
+          "Choose the role to grant from the dropdown — it starts on what they asked for — then press **Approve**, or **Reject**. They're emailed the decision."
+        ]
+      },
+      {
+        title: "Promote someone or change a role",
+        steps: [
+          "Open **Manage Staff** (the button under the summary cards, or **See all** in the Manage Staff panel).",
+          "Pick a new role for any account and press **Update Role** — make someone an agent, operator, technician or another admin.",
+          "Your own role can only be changed from a second admin account."
+        ]
+      },
+      {
+        title: "Company account limits",
+        steps: [
+          "When a company runs out of accounts, choose it under **Company Limit**, enter a new limit and press **Update Limit**."
+        ]
+      },
+      {
+        title: "Keep the platform healthy",
+        steps: [
+          "**Notifications** is the email queue — **Retry** anything that failed.",
+          "**Admin System Alerts** — press **Acknowledge** once each alert is handled.",
+          "**Resolution Receipts** and **Client Errors** are records for checking jobs and diagnosing problems. **Reports** searches every job."
+        ]
+      },
+      {
+        title: "See any portal",
+        steps: [
+          "The portal bar shows every portal. Open one to see it exactly as that role does — a yellow banner reminds you, with a link back to the CEO Console."
+        ]
+      }
+    ]
+  }
+];
+
+const GUIDE_STATUSES = [
+  { status: "new", body: "Just raised. Nobody has started on it yet." },
+  { status: "in_progress", body: "A technician is working on it." },
+  { status: "resolved", body: "The work is done. The technician has recorded the service call number and what was done." },
+  { status: "closed", body: "Finished and filed away." }
+];
+
+const GUIDE_EMAILS = [
+  "**Everyone:** a verification link when you register, a message when your account is approved (or not), and password reset links when you ask for one.",
+  "**Customers:** ticket created, every status change, replies from ABSL, and the resolution with notes and the service call number.",
+  "**Technicians:** when a job is assigned to you, and when a customer replies on one of your jobs.",
+  "**Agents, operators and the CEO:** when a customer replies on a ticket that has no technician yet."
+];
+
+const GUIDE_FAQ = [
+  {
+    q: "I didn't get the verification email.",
+    a: "Wait a few minutes and check your spam or junk folder. Still nothing? Email us at the address below with the address you registered."
+  },
+  {
+    q: "It says “Waiting for admin approval”.",
+    a: "Your account needs an ABSL admin to approve it. You'll get an email as soon as they do — then just sign in again."
+  },
+  {
+    q: "I forgot my password.",
+    a: "Press **Forgot password?** on the login page. The link we email you works once and expires after a short time."
+  },
+  {
+    q: "It says “You do not have permission to do that”.",
+    a: "That action isn't available to your role, or the ticket changed since you opened it (for example, another technician accepted the job). Reload the page and try again."
+  },
+  {
+    q: "It says someone else updated this ticket.",
+    a: "Two people changed it at the same moment. Reload to see their change, then make yours."
+  },
+  {
+    q: "I can't find a ticket.",
+    a: "Clear the search box and set the filters back to **All statuses** and **Any priority**, or press **See all** for the full list."
+  },
+  {
+    q: "The badge at the top says Offline.",
+    a: "You've lost your internet connection. Nothing you change is saved until it comes back."
+  },
+  {
+    q: "Can I put the helpdesk on my phone's home screen?",
+    a: "Yes. On Android (Chrome), open the **⋮** menu and choose **Add to Home screen** or **Install app**. On iPhone (Safari), tap **Share**, then **Add to Home Screen**."
+  }
+];
+
+function guideSteps(steps) {
+  return `<ol class="guide-steps">${steps.map((step) => `<li>${guideText(step)}</li>`).join("")}</ol>`;
+}
+
+function helpPage() {
+  const signedIn = Boolean(currentUser);
+  const myRole = signedIn ? dashboardRouteForRole() : "customer";
+  const sections = [
+    ["guide-start", "Getting started"],
+    ["guide-navigation", "Finding your way"],
+    ["guide-roles", "Guide for your role"],
+    ["guide-tickets", "How a ticket moves"],
+    ["guide-emails", "Emails you'll get"],
+    ["guide-faq", "Common questions"]
+  ];
+
+  return `
+    <div class="guide">
+      <nav class="guide-toc" aria-label="On this page">
+        ${sections
+          .map(([id, label]) => `<button class="guide-chip" type="button" data-guide-jump="${id}">${label}</button>`)
+          .join("")}
+        ${
+          signedIn
+            ? `<button class="guide-chip guide-chip-accent" type="button" id="replayTourBtn">▶ Replay the welcome tour</button>`
+            : ""
+        }
+      </nav>
+
+      <section class="panel guide-section" id="guide-start">
+        <h2>Getting started</h2>
+        <p class="muted">ABSL Helpdesk is where Automated Barcode Solutions customers report problems with their barcode, printing and scanning equipment, and where ABSL staff take every job from first report to fix.</p>
+        ${guideSteps([
+          "**Create your account.** On **Register**, choose **Customer** (or **Technician / Field Staff** if you work for ABSL), then enter your full name, company, email, phone number and a password. Press **Show** to check what you typed.",
+          "**Verify your email.** Open the email we send and click the link — you can't sign in until you do.",
+          "**Wait for approval, if needed.** Accounts on an email domain ABSL has verified are approved straight away. Personal email addresses and all field-staff requests are checked by an ABSL admin first, and you're emailed when that's done.",
+          "**Sign in.** Use **Login** with your email and password. You land on your own dashboard automatically.",
+          "**First time in?** A short welcome tour shows you around. You can replay it any time from this page."
+        ])}
+        <p class="small muted">Agent, Operator and CEO accounts can't be requested when registering. Register as normal and the CEO will set your role.</p>
+      </section>
+
+      <section class="panel guide-section" id="guide-navigation">
+        <h2>Finding your way after you sign in</h2>
+        <div class="guide-grid">
+          ${GUIDE_NAVIGATION.map(
+            (item) => `
+              <article class="guide-card">
+                <h3>${escapeHtml(item.title)}</h3>
+                <p>${guideText(item.body)}</p>
+              </article>`
+          ).join("")}
+        </div>
+        <p class="small muted">Each portal has its own accent colour, so you can tell at a glance which one you're looking at.</p>
+      </section>
+
+      <section class="panel guide-section" id="guide-roles">
+        <h2>Guide for your role</h2>
+        <p class="muted">${
+          signedIn
+            ? "Your own role is opened for you. Tap any other to read it."
+            : "Tap your role to read how to use it."
+        }</p>
+        ${ROLE_GUIDES.map(
+          (guide) => `
+            <details class="guide-role" ${guide.role === myRole ? "open" : ""}>
+              <summary>
+                <span>${escapeHtml(guide.title)}</span>
+                ${signedIn && guide.role === myRole ? `<span class="badge badge-ok">Your role</span>` : ""}
+              </summary>
+              <p class="muted">${escapeHtml(guide.summary)}</p>
+              ${guide.tasks
+                .map(
+                  (task) => `
+                    <h3>${escapeHtml(task.title)}</h3>
+                    ${guideSteps(task.steps)}`
+                )
+                .join("")}
+            </details>`
+        ).join("")}
+      </section>
+
+      <section class="panel guide-section" id="guide-tickets">
+        <h2>How a ticket moves</h2>
+        <div class="guide-statuses">
+          ${GUIDE_STATUSES.map(
+            (item) => `
+              <div class="guide-status">
+                ${statusBadge(item.status)}
+                <p>${escapeHtml(item.body)}</p>
+              </div>`
+          ).join("")}
+        </div>
+        <p>${guideText("**Priority** (High, Medium, Low) says how urgent a job is. **Job type** (Service, Fault, Installation) says what kind of work it is.")}</p>
+        <p>${guideText("**Who can move a ticket:** technicians can mark their jobs In Progress or Resolved; agents, operators and the CEO can set any status; customers can close their own tickets.")}</p>
+      </section>
+
+      <section class="panel guide-section" id="guide-emails">
+        <h2>Emails you'll get</h2>
+        <ul class="guide-list">${GUIDE_EMAILS.map((line) => `<li>${guideText(line)}</li>`).join("")}</ul>
+        <p class="small muted">Emails come from ABSL Helpdesk. If you don't see one, check your spam or junk folder.</p>
+      </section>
+
+      <section class="panel guide-section" id="guide-faq">
+        <h2>Common questions</h2>
+        ${GUIDE_FAQ.map(
+          (item) => `
+            <details class="guide-role">
+              <summary><span>${escapeHtml(item.q)}</span></summary>
+              <p>${guideText(item.a)}</p>
+            </details>`
+        ).join("")}
+        <div class="notice guide-contact">
+          Still stuck? Email <a href="mailto:${escapeHtml(SUPPORT_EMAIL)}">${escapeHtml(SUPPORT_EMAIL)}</a> — include your ticket number if it's about a job.
+        </div>
+      </section>
+
+      <div class="action-row guide-footer">
+        ${
+          signedIn
+            ? `<a class="primary-button" href="${escapeHtml(dashboardRouteForRole())}.html">Go to my dashboard</a>`
+            : `<a class="primary-button" href="register.html">Create an account</a>
+               <a class="secondary-button" href="login.html">Login</a>`
+        }
+      </div>
+    </div>
   `;
 }
 
@@ -4271,7 +4923,7 @@ function agentView() {
           <h2>Ticket Queue</h2>
           <div class="action-row">
             <a class="secondary-button" href="reports.html">Reports</a>
-            <button class="secondary-button" type="button" id="logTicketBtn">📞 Log a Call-In Job</button>
+            <button class="secondary-button" type="button" id="logTicketBtn">➕ Log a Job</button>
             <button class="secondary-button" type="button" id="loadRealTicketsBtn">Refresh</button>
           </div>
         </div>
@@ -4333,7 +4985,7 @@ function operatorView() {
         <div class="panel-title">
           <h2>Ticket Queue</h2>
           <div class="action-row">
-            <button class="secondary-button" type="button" id="logTicketBtn">📞 Log a Call-In Job</button>
+            <button class="secondary-button" type="button" id="logTicketBtn">➕ Log a Job</button>
             <button class="secondary-button" type="button" id="loadRealTicketsBtn">Refresh</button>
           </div>
         </div>
@@ -4425,7 +5077,7 @@ function technicianView() {
           <h2>${isMine ? "My Jobs" : "Technician Jobs"}</h2>
           <div class="action-row">
             <span class="badge badge-muted">${assigned.length} assigned</span>
-            <button class="secondary-button compact-button" type="button" id="logTicketBtn">📞 Log a Call-In Job</button>
+            <button class="secondary-button compact-button" type="button" id="logTicketBtn">➕ Log a Job</button>
           </div>
         </div>
         ${
@@ -4859,7 +5511,7 @@ function render() {
     },
     technician: {
       title: portals.technician.name,
-      description: "Open your assigned field jobs, consume inventory with the Work button, and keep job notes up to date.",
+      description: "Work your assigned jobs, accept jobs from the open pool, log your own jobs, and keep customers updated.",
       render: technicianView
     },
     admin: {
@@ -4895,6 +5547,17 @@ function render() {
     if (window.location.hash) {
       history.replaceState(null, "", window.location.pathname + window.location.search);
     }
+    return;
+  }
+
+  if (route === "help") {
+    document.body.dataset.portal = currentUser
+      ? portals[dashboardRouteForRole()]?.accent || "customer"
+      : "customer";
+    app.innerHTML =
+      pageHeading("User Guide", "Everything you need for your first day: getting in, finding your way around, and getting a job done.") +
+      helpPage();
+    bindEvents();
     return;
   }
 
@@ -5038,6 +5701,7 @@ function render() {
 
   app.innerHTML = headerHtml + views[route].render();
   bindEvents();
+  maybeShowWelcomeTour(route);
 }
 
 function updateNavigation(route) {
@@ -5160,6 +5824,17 @@ function bindEvents() {
   document.querySelectorAll("[data-release-to-pool]").forEach((button) => {
     button.onclick = () => releaseTicketToPool(button.dataset.releaseToPool);
   });
+
+  // Scroll, not #anchors: a hash change re-renders the page (see the
+  // hashchange listener), which would snap every open section shut.
+  document.querySelectorAll("[data-guide-jump]").forEach((button) => {
+    button.onclick = () => {
+      document.getElementById(button.dataset.guideJump)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+  });
+
+  const replayTourBtn = document.querySelector("#replayTourBtn");
+  if (replayTourBtn) replayTourBtn.onclick = () => openWelcomeTour(dashboardRouteForRole());
 
   const useGpsBtn = document.querySelector("#useGpsBtn");
   if (useGpsBtn) useGpsBtn.onclick = captureLocation;
