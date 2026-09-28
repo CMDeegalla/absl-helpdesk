@@ -1310,10 +1310,13 @@ async function signUpUser(event) {
   render();
 
   try {
-    const { error } = await supabaseClient.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
       options: {
+        // Where the verification link lands. Without it Supabase falls back
+        // to the project's Site URL setting, which defaults to localhost.
+        emailRedirectTo: `${window.location.origin}/login.html`,
         data: {
           full_name: fullName,
           company_name: companyName,
@@ -1324,27 +1327,46 @@ async function signUpUser(event) {
     });
 
     if (error) {
-      if (error.message.toLowerCase().includes("limit") || error.message.toLowerCase().includes("account limit reached")) {
+      const message = error.message.toLowerCase();
+      // Only the company account limit - Supabase's own "email rate limit
+      // exceeded" also contains "limit" and used to land here, blaming the
+      // company for what is really "try again in a few minutes".
+      if (message.includes("account limit reached")) {
         await showModal({
           title: "Registration Limit Exceeded",
           body: "Your company has reached its registration account limit. Please contact your ABSL administrator to increase the limit.",
           icon: "error",
           actions: [{ label: "OK", value: true, primary: true }]
         });
+      } else if (message.includes("rate limit") || message.includes("security purposes")) {
+        showToast("Too many sign-up attempts right now. Please wait a few minutes and try again.", "warning");
       } else {
         showToast(friendlyError(error.message), "error");
       }
       return;
     }
 
-    await showModal({
-      title: "Verify Email",
-      body: "Registration successful! A verification email has been sent. Please check your inbox and verify your email.",
-      icon: "success",
-      actions: [{ label: "OK", value: true, primary: true }]
-    });
-
     event.target.reset();
+
+    // With email confirmation on, there is no session until the link is
+    // clicked. With it off, Supabase signs the new account straight in -
+    // telling that person to "check your email" would be untrue.
+    if (data?.session) {
+      await showModal({
+        title: "Account created",
+        body: "Your account is ready. We'll take you in now.",
+        icon: "success",
+        actions: [{ label: "Continue", value: true, primary: true }]
+      });
+    } else {
+      await showModal({
+        title: "Check your email",
+        body: `We've sent a verification link to ${email}. Click it to finish setting up your account, then sign in. If it hasn't arrived in a few minutes, check your spam or junk folder.`,
+        icon: "success",
+        actions: [{ label: "OK", value: true, primary: true }]
+      });
+    }
+
     navigateTo("login");
   } catch (err) {
     showToast(friendlyError(err), "error");
