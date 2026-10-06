@@ -5174,8 +5174,10 @@ function approvalRowHtml(approval) {
       <div>
         <strong>${escapeHtml(approval.name)}</strong>
         <p class="small muted">${escapeHtml(approval.email)} - ${escapeHtml(approval.company)}</p>
-        <span class="badge ${approval.status === "approved" ? "badge-ok" : "badge-muted"}">${escapeHtml(approval.status)}</span>
-        <span class="badge ${approval.requestedRole === "technician" ? "badge-danger" : "badge-muted"}">requests: ${escapeHtml(approval.requestedRole)}</span>
+        <div class="badge-group">
+          <span class="badge ${approval.status === "approved" ? "badge-ok" : "badge-muted"}">${escapeHtml(approval.status)}</span>
+          <span class="badge ${approval.requestedRole === "technician" ? "badge-danger" : "badge-muted"}">requests: ${escapeHtml(approval.requestedRole)}</span>
+        </div>
       </div>
       <div class="action-row">
         ${
@@ -5280,8 +5282,10 @@ function staffRoleRowHtml(profile) {
       <div>
         <strong>${escapeHtml(profile.full_name || profile.email)}</strong>
         <p class="small muted">${escapeHtml(profile.email)}</p>
-        <span class="badge ${profile.approval_status === "approved" ? "badge-ok" : "badge-muted"}">${escapeHtml(profile.approval_status)}</span>
-        <span class="badge badge-muted">${escapeHtml(profile.role)}</span>
+        <div class="badge-group">
+          <span class="badge ${profile.approval_status === "approved" ? "badge-ok" : "badge-muted"}">${escapeHtml(profile.approval_status)}</span>
+          <span class="badge badge-muted">${escapeHtml(profile.role)}</span>
+        </div>
       </div>
       <div class="action-row">
         ${

@@ -469,7 +469,7 @@ button[disabled] {
 }
 
 .dashboard-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
 }
 
 /* Stat cards vary by role — 1 for a customer, 3 for agent/technician, 4 for
@@ -548,7 +548,8 @@ button[disabled] {
 .panel h3 {
   margin: 0;
   letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .panel h2 {
@@ -577,7 +578,8 @@ button[disabled] {
 .inventory-row strong,
 td,
 th {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* --- Stat Cards --- */
@@ -658,12 +660,16 @@ th {
   display: inline-flex;
   align-items: center;
   width: fit-content;
+  max-width: 100%;
   min-height: 26px;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
   transition: all var(--transition);
 }
 
@@ -936,8 +942,9 @@ th {
 
 /* --- Inventory Rows --- */
 .inventory-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 12px;
   align-items: center;
   padding: 14px 0;
@@ -951,6 +958,27 @@ th {
 
 .inventory-row:last-child {
   border-bottom: 0;
+}
+
+.inventory-row > div:first-child {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.inventory-row > .action-row,
+.inventory-row > button,
+.inventory-row > select,
+.inventory-row > span {
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+.badge-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 /* --- Notice --- */
